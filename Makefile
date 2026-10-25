@@ -1,14 +1,14 @@
-CC = gcc
-CFLAGS = -Wall -Wextra -std=c11 -g
+CC     = gcc
+CFLAGS = -Wall -Wextra -std=c11
 
-lista06: main.c ListaTarefas.c ListaTarefas.h
-	$(CC) $(CFLAGS) main.c ListaTarefas.c -o lista05
+teste: ListaDinEncadeada.o main.o
+	$(CC) $(CFLAGS) -o teste ListaDinEncadeada.o main.o
 
-run: lista06
-	./lista06
+ListaDinEncadeada.o: ListaDinEncadeada.c ListaDinEncadeada.h
+	$(CC) $(CFLAGS) -c ListaDinEncadeada.c
 
-valgrind: lista06
-	valgrind --leak-check=full --show-leak-kinds=all ./lista05
+main.o: main.c ListaDinEncadeada.h
+	$(CC) $(CFLAGS) -c main.c
 
 clean:
-	rm -f lista05
+	rm -f *.o teste

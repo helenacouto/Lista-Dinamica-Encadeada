@@ -3,106 +3,119 @@
 #include <string.h>
 #include "ListaDinEncadeada.h"
 
+/* Cada elemento guarda os dados e o endereco do proximo elemento.
+   O ultimo elemento aponta para NULL. */
 struct elemento {
     struct tarefa dados;
     struct elemento *prox;
 };
 typedef struct elemento Elem;
 
-ListaTarefas* cria_lista(void){
+/* ------------------------------------------------------------
+   Criacao e destruicao
+   ------------------------------------------------------------ */
+
+ListaTarefas* cria_lista(void) {
     ListaTarefas* li = (ListaTarefas*) malloc(sizeof(ListaTarefas));
-    if(li != NULL)
-        *li = NULL;
+    if (li != NULL)
+        *li = NULL;               /* lista vazia: o inicio aponta para NULL */
     return li;
 }
 
-void libera_lista(ListaTarefas* li){
-    if(li != NULL){
+void libera_lista(ListaTarefas* li) {
+    if (li != NULL) {
         Elem* no;
-        while((*li) != NULL){
+        while ((*li) != NULL) {
             no = *li;
-            *li = (*li)->prox;
+            *li = (*li)->prox;    /* avanca ANTES de liberar */
             free(no);
         }
-        free(li);
+        free(li);                 /* libera o bloco do inicio */
     }
 }
 
-int tamanho_lista(ListaTarefas* li){
-    if(li == NULL)
+/* ------------------------------------------------------------
+   Informacoes de estado
+   ------------------------------------------------------------ */
+
+int tamanho_lista(ListaTarefas* li) {
+    if (li == NULL)
         return -1;
     int cont = 0;
     Elem* no = *li;
-    while(no != NULL){
+    while (no != NULL) {          /* nao ha campo qtd: e preciso percorrer */
         cont++;
         no = no->prox;
     }
     return cont;
 }
 
-int lista_cheia(ListaTarefas* li){
-    if(li == NULL)
+int lista_cheia(ListaTarefas* li) {
+    if (li == NULL)
         return -1;
-    return 0;
+    return 0;                     /* so falta memoria quando o malloc falha */
 }
 
-int lista_vazia(ListaTarefas* li){
-    if(li == NULL)
+int lista_vazia(ListaTarefas* li) {
+    if (li == NULL)
         return -1;
-    if(*li == NULL)
+    if (*li == NULL)
         return 1;
     return 0;
 }
 
-int insere_tarefa_inicio(ListaTarefas* li, struct tarefa t){
-    if(li == NULL) return 0;
+/* ------------------------------------------------------------
+   Insercao
+   ------------------------------------------------------------ */
+
+int insere_tarefa_inicio(ListaTarefas* li, struct tarefa t) {
+    if (li == NULL) return 0;
     Elem* no = (Elem*) malloc(sizeof(Elem));
-    if(no == NULL) return 0;
+    if (no == NULL) return 0;     /* falta de memoria: lista cheia */
     no->dados = t;
-    no->prox = (*li);
-    *li = no;
+    no->prox = (*li);             /* 1o: liga o novo no ao antigo primeiro */
+    *li = no;                     /* 2o: so entao altera o inicio */
     return 1;
 }
 
-int insere_tarefa_final(ListaTarefas* li, struct tarefa t){
-    if(li == NULL) return 0;
+int insere_tarefa_final(ListaTarefas* li, struct tarefa t) {
+    if (li == NULL) return 0;
     Elem* no = (Elem*) malloc(sizeof(Elem));
-    if(no == NULL) return 0;
+    if (no == NULL) return 0;
     no->dados = t;
-    no->prox = NULL;
-    if((*li) == NULL){
+    no->prox = NULL;              /* o novo no sera o ultimo */
+    if ((*li) == NULL) {          /* lista vazia: insere no inicio */
         *li = no;
-    }else{
+    } else {
         Elem* aux = *li;
-        while(aux->prox != NULL){
+        while (aux->prox != NULL) /* para NO ultimo, e nao depois dele */
             aux = aux->prox;
-        }
         aux->prox = no;
     }
     return 1;
 }
 
-int insere_tarefa_ordenada(ListaTarefas* li, struct tarefa t){
-    if(li == NULL) return 0;
+int insere_tarefa_ordenada(ListaTarefas* li, struct tarefa t) {
+    if (li == NULL) return 0;
     Elem* no = (Elem*) malloc(sizeof(Elem));
-    if(no == NULL) return 0;
+    if (no == NULL) return 0;
     no->dados = t;
-    if((*li) == NULL){
+    if ((*li) == NULL) {          /* lista vazia: insere no inicio */
         no->prox = NULL;
         *li = no;
         return 1;
-    }
-    else{
+    } else {
         Elem *ant = NULL, *atual = *li;
-        while(atual != NULL &&
-              atual->dados.prioridade < t.prioridade){
+        /* procura o primeiro elemento com prioridade maior ou igual */
+        while (atual != NULL &&
+               atual->dados.prioridade < t.prioridade) {
             ant = atual;
             atual = atual->prox;
         }
-        if(atual == *li){ 
+        if (atual == *li) {       /* insere no inicio */
             no->prox = (*li);
             *li = no;
-        }else{
+        } else {                  /* insere entre ant e atual */
             no->prox = atual;
             ant->prox = no;
         }
@@ -110,87 +123,92 @@ int insere_tarefa_ordenada(ListaTarefas* li, struct tarefa t){
     }
 }
 
-int remove_tarefa_inicio(ListaTarefas* li){
-    if(li == NULL) return 0;
-    if((*li) == NULL)
+/* ------------------------------------------------------------
+   Remocao
+   ------------------------------------------------------------ */
+
+int remove_tarefa_inicio(ListaTarefas* li) {
+    if (li == NULL) return 0;
+    if ((*li) == NULL)            /* lista vazia */
         return 0;
     Elem *no = *li;
-    *li = no->prox;
+    *li = no->prox;               /* religa antes do free */
     free(no);
     return 1;
 }
 
-int remove_tarefa_final(ListaTarefas* li){
-    if(li == NULL) return 0;
-    if((*li) == NULL)
+int remove_tarefa_final(ListaTarefas* li) {
+    if (li == NULL) return 0;
+    if ((*li) == NULL)            /* lista vazia */
         return 0;
     Elem *ant = NULL, *no = *li;
-    while(no->prox != NULL){
+    while (no->prox != NULL) {
         ant = no;
         no = no->prox;
     }
-    if(no == (*li))
+    if (no == (*li))              /* unico elemento: a lista fica vazia */
         *li = no->prox;
     else
-        ant->prox = no->prox;
+        ant->prox = no->prox;     /* o penultimo passa a apontar para NULL */
     free(no);
     return 1;
 }
 
-int remove_tarefa(ListaTarefas* li, int codigo){
-    if(li == NULL) return 0;
-    if((*li) == NULL) /* lista vazia */
+int remove_tarefa(ListaTarefas* li, int codigo) {
+    if (li == NULL) return 0;
+    if ((*li) == NULL)            /* lista vazia */
         return 0;
     Elem *ant = NULL, *no = *li;
-    while(no != NULL && no->dados.codigo != codigo){
+    while (no != NULL && no->dados.codigo != codigo) {
         ant = no;
         no = no->prox;
     }
-    if(no == NULL)
+    if (no == NULL)               /* elemento nao encontrado */
         return 0;
-    if(no == *li)
+    if (no == *li)                /* remove o primeiro */
         *li = no->prox;
     else
-        ant->prox = no->prox;
+        ant->prox = no->prox;     /* contorna o no removido */
     free(no);
     return 1;
 }
 
-int busca_tarefa_pos(ListaTarefas* li, int pos, struct tarefa *t){
-    if(li == NULL || pos <= 0)
+/* ------------------------------------------------------------
+   Busca
+   ------------------------------------------------------------ */
+
+int busca_tarefa_pos(ListaTarefas* li, int pos, struct tarefa *t) {
+    if (li == NULL || pos <= 0)
         return 0;
     Elem *no = *li;
     int i = 1;
-    while(no != NULL && i < pos){
+    while (no != NULL && i < pos) { /* nao ha indice: percorre ate a posicao */
         no = no->prox;
         i++;
     }
-    if(no == NULL)
+    if (no == NULL)               /* posicao maior que o tamanho */
         return 0;
-    else{
+    else {
         *t = no->dados;
         return 1;
     }
 }
 
-int busca_tarefa_cod(ListaTarefas* li, int codigo, struct tarefa *t){
-    if(li == NULL)
+int busca_tarefa_cod(ListaTarefas* li, int codigo, struct tarefa *t) {
+    if (li == NULL)
         return 0;
     Elem *no = *li;
-    while(no != NULL && no->dados.codigo != codigo){
+    while (no != NULL && no->dados.codigo != codigo)
         no = no->prox;
-    }
-    if(no == NULL)
+    if (no == NULL)               /* elemento nao encontrado */
         return 0;
-    else{
+    else {
         *t = no->dados;
         return 1;
     }
 }
 
-
-
-/* Q1 */
+/*=========== QUESTÃO 1 ===========*/
 int conta_tarefas_prioridade(ListaTarefas* li, int prioridade){
     if (li == NULL) return -1;
     
@@ -204,7 +222,7 @@ int conta_tarefas_prioridade(ListaTarefas* li, int prioridade){
     return cont;
 }
 
-/* Q2 */
+/*=========== QUESTÃO 2 ===========*/
 int tarefa_mais_urgente(ListaTarefas* li, struct tarefa *t){
     if (li == NULL || *li == NULL) return 0;
 
@@ -226,7 +244,7 @@ int tarefa_mais_urgente(ListaTarefas* li, struct tarefa *t){
     return 1;
 }
 
-/* Q3 */
+/*=========== QUESTÃO 3 ===========*/
 int busca_tarefa_desc(ListaTarefas* li, char *texto, struct tarefa *t){
     if (li == NULL || *li == NULL) return 0;
 
@@ -242,7 +260,7 @@ int busca_tarefa_desc(ListaTarefas* li, char *texto, struct tarefa *t){
     return 0;
 }
 
-/* Q4 */
+/*=========== QUESTÃO 4 ===========*/
 int insere_tarefa_final_prioridade(ListaTarefas* li, struct tarefa t){
     if (li == NULL) return 0;
 
@@ -274,7 +292,7 @@ int insere_tarefa_final_prioridade(ListaTarefas* li, struct tarefa t){
     return 1;
 }
 
-/* Q5 */
+/*=========== QUESTÃO 5 ===========*/
 int remove_tarefas_prioridade(ListaTarefas* li, int prioridade){
     if (li == NULL) return -1;
 
@@ -305,7 +323,7 @@ int remove_tarefas_prioridade(ListaTarefas* li, int prioridade){
     return cont;
 }
 
-/* Q6 */
+/*=========== QUESTÃO 6 ===========*/
 int inverte_lista(ListaTarefas* li){
     if (li == NULL) return 0;
 
@@ -325,7 +343,7 @@ int inverte_lista(ListaTarefas* li){
     return 1;
 }
 
-/* Q7 */
+/*=========== QUESTÃO 7 ===========*/
 int remove_tarefa_pos(ListaTarefas* li, int pos){
     if (li == NULL || *li == NULL || pos < 1 || pos > tamanho_lista(li))
         return 0;
@@ -355,7 +373,7 @@ int remove_tarefa_pos(ListaTarefas* li, int pos){
     return 0;
 }
 
-/* Q8*/
+/*=========== QUESTÃO 8 ===========*/
 int mescla_tarefas(ListaTarefas* dst, ListaTarefas* src){
     if (dst == NULL || src == NULL) return -1;
     if (dst == src) return 0;
